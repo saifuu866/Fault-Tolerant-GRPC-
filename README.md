@@ -1,3 +1,4 @@
+
 # Fault-Tolerant Distributed RPC Framework
 
 An Operating-Systems course project that demonstrates how distributed services
@@ -6,7 +7,7 @@ communicate (gRPC + Protocol Buffers), how requests are distributed
 health monitoring) and how a simple coordinator-managed **leader election**
 works — all on a single laptop, no Docker, no cloud.
 
----
+
 
 ### 📚 Documentation & Reference Guides
 
