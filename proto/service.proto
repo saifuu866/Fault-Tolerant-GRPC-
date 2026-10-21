@@ -1,0 +1,56 @@
+// Protocol Buffers definition for the Fault-Tolerant RPC demo.
+// One service with three RPCs:
+//   Execute     -> the real application RPC (what clients call)
+//   HealthCheck -> used by the Health Monitor
+//   Admin       -> used by the dashboard to simulate failure / recovery / leadership
+
+syntax = "proto3";
+
+package ftrpc;
+
+service ComputeService {
+  rpc Execute     (ComputeRequest) returns (ComputeResponse);
+  rpc HealthCheck (HealthRequest)  returns (HealthResponse);
+  rpc Admin       (AdminRequest)   returns (AdminResponse);
+}
+
+// ---------- application RPC ----------
+message ComputeRequest {
+  string request_id = 1;   // stable across retries (lets the server detect retries)
+  string operation  = 2;   // echo | sum | square | slow | flaky | boom
+  string payload    = 3;   // operation argument
+  int32  attempt    = 4;   // attempt number sent by the client (for logging)
+}
+
+message ComputeResponse {
+  string request_id    = 1;
+  string server_id     = 2;
+  string result        = 3;
+  string status        = 4;   // "OK"
+  string message       = 5;
+  double processing_ms = 6;
+  int32  attempt       = 7;
+}
+
+// ---------- health ----------
+message HealthRequest { string source = 1; }
+
+message HealthResponse {
+  string server_id        = 1;
+  bool   healthy          = 2;
+  bool   is_leader        = 3;
+  int64  handled_requests = 4;
+  double uptime_seconds   = 5;
+}
+
+// ---------- admin / failure injection ----------
+message AdminRequest {
+  string command = 1;  // KILL | REVIVE | SET_LEADER | CLEAR_LEADER | SET_FAIL_RATE | STATUS
+  string value   = 2;
+}
+
+message AdminResponse {
+  string server_id = 1;
+  bool   ok        = 2;
+  string message   = 3;
+}

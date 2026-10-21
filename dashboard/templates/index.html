@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fault-Tolerant Distributed RPC Framework — Cluster Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ==================== HEADER ==================== -->
+<header class="app-header">
+  <div class="header-container">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+          <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+          <line x1="6" y1="6" x2="6.01" y2="6"></line>
+          <line x1="6" y1="18" x2="6.01" y2="18"></line>
+        </svg>
+      </div>
+      <div>
+        <h1>Fault-Tolerant Distributed RPC Framework</h1>
+        <p class="tagline">Operating Systems Distributed Systems Project &middot; gRPC &middot; Round-Robin &middot; Failover &middot; Leader Election</p>
+      </div>
+    </div>
+
+    <div class="header-status">
+      <div class="live-pulse-badge">
+        <span class="pulse-dot"></span>
+        <span class="pulse-text">Cluster Active</span>
+      </div>
+      <div class="uptime-badge" title="Coordinator Daemon Uptime">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span id="clock">uptime 0s</span>
+      </div>
+      <button class="btn btn-outline" onclick="resetMetrics()" title="Reset all telemetry metrics to zero">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+          <path d="M3 3v5h5"></path>
+        </svg>
+        Reset Metrics
+      </button>
+    </div>
+  </div>
+
+  <!-- Navigation Tab Bar -->
+  <div class="tabs-bar">
+    <div class="tabs-container">
+      <button class="tab-btn active" onclick="switchTab('tab-live')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        Live Cluster Dashboard
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-scenarios')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        Demonstration Scenarios
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-architecture')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        Architecture & OS Concepts
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-spec')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        Fault-Tolerance Specs
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="main-content">
+
+  <!-- ========================================================================= -->
+  <!-- TAB 1: LIVE CLUSTER DASHBOARD & CONTROLS -->
+  <!-- ========================================================================= -->
+  <div id="tab-live" class="tab-pane active">
+    
+    <!-- Cluster Info Banner -->
+    <div class="info-banner">
+      <div class="banner-item">
+        <span class="banner-dot green"></span>
+        <span><strong>Topology:</strong> 3 Replicated gRPC Backends</span>
+      </div>
+      <div class="banner-item">
+        <span class="banner-dot blue"></span>
+        <span><strong>Dispatch:</strong> Round-Robin with Skip</span>
+      </div>
+      <div class="banner-item">
+        <span class="banner-dot amber"></span>
+        <span><strong>Health Daemon:</strong> 2.0s Heartbeat Probe</span>
+      </div>
+      <div class="banner-item">
+        <span class="banner-dot purple"></span>
+        <span><strong>Election:</strong> Deterministic Lowest-ID Online</span>
+      </div>
+    </div>
+
+    <!-- ---------------- Metric Cards Strip ---------------- -->
+    <section class="metrics-grid">
+      <div class="stat-card stat-total">
+        <div class="stat-header">
+          <span class="stat-label">Total Requests</span>
+          <div class="stat-icon blue">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="20" x2="12" y2="10"></line>
+              <line x1="18" y1="20" x2="18" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="16"></line>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="m-total">0</div>
+        <div class="stat-sub">Client RPC calls invoked</div>
+      </div>
+
+      <div class="stat-card stat-success">
+        <div class="stat-header">
+          <span class="stat-label">Successful</span>
+          <div class="stat-icon green">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="m-success">0</div>
+        <div class="stat-sub">Completed with success status</div>
+      </div>
+
+      <div class="stat-card stat-failed">
+        <div class="stat-header">
+          <span class="stat-label">Failed (Final)</span>
+          <div class="stat-icon red">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="m-failed">0</div>
+        <div class="stat-sub">Permanent or exhausted retries</div>
+      </div>
+
+      <div class="stat-card stat-retries">
+        <div class="stat-header">
+          <span class="stat-label">Retry Attempts</span>
+          <div class="stat-icon amber">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="m-retries">0</div>
+        <div class="stat-sub">Linear backoff (0.4s &times; n)</div>
+      </div>
+
+      <div class="stat-card stat-failovers">
+        <div class="stat-header">
+          <span class="stat-label">Failovers</span>
+          <div class="stat-icon orange">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="16 3 21 3 21 8"></polyline>
+              <line x1="4" y1="20" x2="21" y2="3"></line>
+              <polyline points="21 16 21 21 16 21"></polyline>
+              <line x1="15" y1="15" x2="21" y2="21"></line>
+              <line x1="4" y1="4" x2="9" y2="9"></line>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="m-failovers">0</div>
+        <div class="stat-sub">Rerouted from crashed nodes</div>
+      </div>
+
+      <div class="stat-card stat-leader">
+        <div class="stat-header">
+          <span class="stat-label">Current Leader</span>
+          <div class="stat-icon purple">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value stat-leader-val" id="m-leader">-</div>
+        <div class="stat-sub">Coordinator-managed master</div>
+      </div>
+    </section>
+
+    <!-- ---------------- Main Two-Column Control Center ---------------- -->
+    <div class="dashboard-grid">
+      
+      <!-- Left Column: Servers & Cluster Controls -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                <line x1="6" y1="18" x2="6.01" y2="18"></line>
+              </svg>
+              Backend Server Nodes
+            </h2>
+            <p class="panel-sub">Real-time status of replicated gRPC services <span class="badge-online-count" id="online-count">(3/3 online)</span></p>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table id="server-table" class="data-table">
+            <thead>
+              <tr>
+                <th>Server Node</th>
+                <th>Address</th>
+                <th>Status</th>
+                <th>Requests</th>
+                <th>OK</th>
+                <th>Fail</th>
+                <th>Latency</th>
+                <th>Fault Injection</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Injected by script.js -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Request Distribution Progress Bars -->
+        <div class="dist-section">
+          <div class="dist-header">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 20V10"></path>
+                <path d="M12 20V4"></path>
+                <path d="M6 20v-6"></path>
+              </svg>
+              Round-Robin Load Distribution
+            </h3>
+            <span class="hint-pill">Dynamic Rotation Across Active Nodes</span>
+          </div>
+          <div id="dist" class="dist-container">
+            <!-- Dynamic bars rendered by script.js -->
+          </div>
+        </div>
+
+        <!-- Leader Management & Simulation Controls -->
+        <div class="cluster-actions-card">
+          <div class="actions-header">
+            <span class="actions-title">Cluster Fault Injection & Leader Controls</span>
+            <span class="actions-note">Simulate real distributed network crashes and election failover</span>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-danger" onclick="killLeader()" title="Kill currently designated leader replica to verify immediate re-election">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              Simulate Leader Failure
+            </button>
+            <button class="btn btn-purple" onclick="forceElection()" title="Trigger the election algorithm across all online nodes">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+              </svg>
+              Force Re-election
+            </button>
+            <button class="btn btn-secondary" onclick="resetMetrics()" title="Zero out all request and error counts">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+              Reset Counters
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Right Column: Interactive RPC Client & Trace Log -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="4 17 10 11 4 5"></polyline>
+                <line x1="12" y1="19" x2="20" y2="19"></line>
+              </svg>
+              Send RPC Request
+            </h2>
+            <p class="panel-sub">Test client proxy with error classification, retries, and failovers</p>
+          </div>
+        </div>
+
+        <!-- Quick Scenario Chips -->
+        <div class="quick-presets">
+          <span class="preset-label">Quick Presets:</span>
+          <button type="button" class="preset-chip" onclick="applyPreset('echo', 'hello distributed world', 6)">
+            ⚡ 6x Echo (Load Balancing)
+          </button>
+          <button type="button" class="preset-chip" onclick="applyPreset('flaky', '1', 1)">
+            🔄 Flaky (Retry Demo)
+          </button>
+          <button type="button" class="preset-chip" onclick="applyPreset('boom', '', 1)">
+            💥 Boom (Permanent Error)
+          </button>
+          <button type="button" class="preset-chip" onclick="applyPreset('sum', '10,25,45', 3)">
+            ➕ Sum (3 Calls)
+          </button>
+        </div>
+
+        <!-- Form -->
+        <div class="rpc-form">
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label for="operation">Service Operation</label>
+              <select id="operation" class="form-control">
+                <option value="echo">echo &mdash; Returns payload (reliable baseline)</option>
+                <option value="sum">sum &mdash; Adds comma-separated integers</option>
+                <option value="square">square &mdash; Computes integer power</option>
+                <option value="slow">slow &mdash; Injects server sleep delay</option>
+                <option value="flaky">flaky &mdash; Fails first N attempts (triggers retry & backoff)</option>
+                <option value="boom">boom &mdash; Throws permanent INVALID_ARGUMENT (no retry)</option>
+              </select>
+            </div>
+            
+            <div class="form-group flex-1">
+              <label for="count">Batch Count</label>
+              <input id="count" type="number" class="form-control" value="3" min="1" max="20">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="payload">
+              <span>Payload Argument</span>
+              <span class="input-hint" id="payload-hint">String or numbers matching operation</span>
+            </label>
+            <input id="payload" type="text" class="form-control" value="hello">
+          </div>
+
+          <button class="btn btn-primary btn-lg" id="send-btn" onclick="sendRequest()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+            Send RPC Request(s)
+          </button>
+        </div>
+
+        <!-- Trace Results -->
+        <div class="results-container">
+          <div class="results-header">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              Execution Trace & Per-Attempt Audit
+            </h3>
+            <button class="btn btn-xs btn-outline" onclick="clearResults()">Clear Trace</button>
+          </div>
+          <div id="results" class="results-scroll">
+            <div class="empty-state">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <p>No RPC requests dispatched yet.</p>
+              <span>Click "Send RPC Request(s)" or choose a Quick Preset above to see live attempt traces.</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+
+    <!-- ---------------- Full-Width System Event Log ---------------- -->
+    <section class="panel event-log-panel">
+      <div class="panel-header">
+        <div>
+          <h2>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="4 17 10 11 4 5"></polyline>
+              <line x1="12" y1="19" x2="20" y2="19"></line>
+            </svg>
+            Cluster Event & Audit Log
+          </h2>
+          <p class="panel-sub">Real-time coordinator transitions, heartbeat probes, elections, and failover notifications</p>
+        </div>
+        
+        <div class="event-filter-controls">
+          <div class="filter-pill-group">
+            <button class="filter-pill active" onclick="setLogFilter('ALL')">All</button>
+            <button class="filter-pill" onclick="setLogFilter('INFO')">Info</button>
+            <button class="filter-pill" onclick="setLogFilter('SUCCESS')">Success</button>
+            <button class="filter-pill" onclick="setLogFilter('WARN')">Warn</button>
+            <button class="filter-pill" onclick="setLogFilter('ERROR')">Error</button>
+          </div>
+          <input type="text" id="event-search" class="search-input" placeholder="Search logs..." oninput="filterEvents()">
+        </div>
+      </div>
+
+      <div id="events" class="events-log-body">
+        <!-- Rendered by script.js -->
+      </div>
+    </section>
+
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- TAB 2: INTERACTIVE SCENARIOS WALKTHROUGH -->
+  <!-- ========================================================================= -->
+  <div id="tab-scenarios" class="tab-pane">
+    <div class="page-intro-card">
+      <h2>Interactive Demonstration Scenarios</h2>
+      <p>Follow these structured walkthroughs to test every resilience mechanism in the distributed framework. Each card explains the expected distributed systems behavior and includes a 1-click preset button to load the test parameters.</p>
+    </div>
+
+    <div class="scenarios-grid">
+      <!-- Scenario 1 -->
+      <div class="scenario-card">
+        <div class="scenario-badge s1">Scenario 1</div>
+        <h3>Normal Round-Robin Load Balancing</h3>
+        <p class="scenario-desc">Tests fair request distribution across all healthy backend replicas with zero failures.</p>
+        <div class="scenario-steps">
+          <div class="step-item"><strong>1. Action:</strong> Send 6 <code>echo</code> requests with payload <code>"hello"</code>.</div>
+          <div class="step-item"><strong>2. Expected:</strong> All 6 succeed. The distribution bars show an exact 2 / 2 / 2 request split across server-1, server-2, and server-3.</div>
+          <div class="step-item"><strong>3. OS Concept:</strong> Round-robin CPU scheduling applied to distributed network processes.</div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="runScenario(1)">
+          Load Scenario 1 (6x Echo)
+        </button>
+      </div>
+
+      <!-- Scenario 2 -->
+      <div class="scenario-card">
+        <div class="scenario-badge s2">Scenario 2</div>
+        <h3>Server Failure & Transparent Failover</h3>
+        <p class="scenario-desc">Simulates a sudden node crash while requests are actively in flight.</p>
+        <div class="scenario-steps">
+          <div class="step-item"><strong>1. Action:</strong> Click <strong>Kill</strong> on <code>server-1</code>, then send 4 requests.</div>
+          <div class="step-item"><strong>2. Expected:</strong> <code>server-1</code> immediately turns <code>OFFLINE</code>. All subsequent requests are transparently redirected to <code>server-2</code> and <code>server-3</code> with 0 client errors.</div>
+          <div class="step-item"><strong>3. OS Concept:</strong> Fault isolation and graceful degradation.</div>
+        </div>
+        <button class="btn btn-danger btn-block" onclick="runScenario(2)">
+          Load Scenario 2 (Kill Server-1)
+        </button>
+      </div>
+
+      <!-- Scenario 3 -->
+      <div class="scenario-card">
+        <div class="scenario-badge s3">Scenario 3</div>
+        <h3>Transient Failures & Backoff Retries</h3>
+        <p class="scenario-desc">Demonstrates handling temporary hiccups (e.g. locks or packet loss) with automatic retry.</p>
+        <div class="scenario-steps">
+          <div class="step-item"><strong>1. Action:</strong> Send <code>flaky</code> with payload <code>"1"</code> and count <code>1</code>.</div>
+          <div class="step-item"><strong>2. Expected:</strong> Attempt 1 returns <code>ABORTED</code>. The client pauses (0.4s backoff) and retries on attempt 2, which succeeds. The <em>Retry Attempts</em> card increments.</div>
+          <div class="step-item"><strong>3. OS Concept:</strong> Exponential/linear backoff and transient fault tolerance.</div>
+        </div>
+        <button class="btn btn-amber btn-block" onclick="runScenario(3)">
+          Load Scenario 3 (Flaky Retry)
+        </button>
+      </div>
+
+      <!-- Scenario 4 -->
+      <div class="scenario-card">
+        <div class="scenario-badge s4">Scenario 4</div>
+        <h3>Permanent Client Errors (Fail-Fast)</h3>
+        <p class="scenario-desc">Proves that unrecoverable errors are NOT retried, preventing wasted cluster capacity.</p>
+        <div class="scenario-steps">
+          <div class="step-item"><strong>1. Action:</strong> Send operation <code>boom</code> (or <code>sum</code> with malformed input <code>"abc"</code>).</div>
+          <div class="step-item"><strong>2. Expected:</strong> Fails immediately on attempt 1 with <code>INVALID_ARGUMENT</code>. Total attempts = exactly 1 (no retries).</div>
+          <div class="step-item"><strong>3. OS Concept:</strong> Error classification & fail-fast design principle.</div>
+        </div>
+        <button class="btn btn-outline btn-block" onclick="runScenario(4)">
+          Load Scenario 4 (Boom Fail-Fast)
+        </button>
+      </div>
+
+      <!-- Scenario 5 -->
+      <div class="scenario-card">
+        <div class="scenario-badge s5">Scenario 5</div>
+        <h3>Probationary Server Recovery</h3>
+        <p class="scenario-desc">Demonstrates the 2-probe health transition before admitting a recovered node back to traffic.</p>
+        <div class="scenario-steps">
+          <div class="step-item"><strong>1. Action:</strong> Click <strong>Revive</strong> on a previously killed server and watch its badge.</div>
+          <div class="step-item"><strong>2. Expected:</strong> Status transitions <code>OFFLINE &rarr; RECOVERING (probation) &rarr; ONLINE</code>. Traffic only resumes once <code>ONLINE</code>.</div>
+          <div class="step-item"><strong>3. OS Concept:</strong> Two-phase commit / health watchdog hysteresis.</div>
+        </div>
+        <button class="btn btn-success btn-block" onclick="runScenario(5)">
+          Load Scenario 5 (Revive All)
+        </button>
+      </div>
+
+      <!-- Scenario 6 -->
+      <div class="scenario-card">
+        <div class="scenario-badge s6">Scenario 6</div>
+        <h3>Leader Election & Re-election Failover</h3>
+        <p class="scenario-desc">Tests coordinator-managed leader election when the current leader crashes.</p>
+        <div class="scenario-steps">
+          <div class="step-item"><strong>1. Action:</strong> Check <em>Current Leader</em> (e.g. <code>server-1</code>), then click <strong>Simulate Leader Failure</strong>.</div>
+          <div class="step-item"><strong>2. Expected:</strong> <code>server-1</code> goes offline. The leader card immediately updates to <code>server-2</code>. Event log records election handover.</div>
+          <div class="step-item"><strong>3. OS Concept:</strong> Distributed mutual exclusion and coordinator election.</div>
+        </div>
+        <button class="btn btn-purple btn-block" onclick="runScenario(6)">
+          Load Scenario 6 (Leader Handover)
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- TAB 3: SYSTEM ARCHITECTURE & OS CONCEPTS -->
+  <!-- ========================================================================= -->
+  <div id="tab-architecture" class="tab-pane">
+    <div class="page-intro-card">
+      <h2>System Architecture & Operating Systems Foundation</h2>
+      <p>This project models production-grade distributed infrastructure using pure Python and standard OS primitives. Below is the complete structural blueprint and OS mapping.</p>
+    </div>
+
+    <!-- Visual Architecture Layout -->
+    <div class="arch-schematic-card">
+      <h3>Multi-Tier Topology Blueprint</h3>
+      
+      <div class="arch-tiers">
+        <!-- Tier 1: Client / Web -->
+        <div class="arch-tier-box">
+          <div class="tier-tag">Tier 1: Presentation & Client Application</div>
+          <div class="tier-title">Flask Web Dashboard (:5000) &amp; Client CLI</div>
+          <p class="tier-text">Dispatches user RPC calls through the client proxy, polls JSON cluster state every 1.5s, and injects simulated failures.</p>
+        </div>
+
+        <div class="tier-arrow-down">
+          <span>&darr; In-process Python invocation / client.call(op, payload)</span>
+        </div>
+
+        <!-- Tier 2: Coordinator -->
+        <div class="arch-tier-box coordinator-box">
+          <div class="tier-tag">Tier 2: Coordinator &amp; Resilience Kernel</div>
+          <div class="tier-title">Cluster Coordinator Components</div>
+          <div class="coord-components-grid">
+            <div class="c-comp">
+              <strong>ServerRegistry</strong>
+              <span>Mutex-protected state (RLock), counters &amp; rolling log</span>
+            </div>
+            <div class="c-comp">
+              <strong>RoundRobinLoadBalancer</strong>
+              <span>Pointer walk skipping OFFLINE / RECOVERING nodes</span>
+            </div>
+            <div class="c-comp">
+              <strong>FailoverManager</strong>
+              <span>Immediate eviction upon network failure</span>
+            </div>
+            <div class="c-comp">
+              <strong>HealthMonitor</strong>
+              <span>2.0s background daemon thread with gRPC health check</span>
+            </div>
+            <div class="c-comp">
+              <strong>LeaderElector</strong>
+              <span>Deterministic lowest-order online master assignment</span>
+            </div>
+            <div class="c-comp">
+              <strong>RpcClient Proxy</strong>
+              <span>Max 3 attempts, linear backoff, status classifier</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tier-arrow-down">
+          <span>&darr; gRPC over HTTP/2 with Protocol Buffers binary payloads</span>
+        </div>
+
+        <!-- Tier 3: Backend Replicas -->
+        <div class="arch-tier-box servers-box">
+          <div class="tier-tag">Tier 3: Replicated Server Pool</div>
+          <div class="tier-title">Independent OS Worker Processes</div>
+          <div class="servers-grid-diagram">
+            <div class="s-diagram-card">
+              <h4>server-1</h4>
+              <div class="port-tag">127.0.0.1:50051</div>
+              <p>ThreadPoolExecutor(8) &middot; ExecuteService &middot; AdminService &middot; HealthService</p>
+            </div>
+            <div class="s-diagram-card">
+              <h4>server-2</h4>
+              <div class="port-tag">127.0.0.1:50052</div>
+              <p>ThreadPoolExecutor(8) &middot; ExecuteService &middot; AdminService &middot; HealthService</p>
+            </div>
+            <div class="s-diagram-card">
+              <h4>server-3</h4>
+              <div class="port-tag">127.0.0.1:50053</div>
+              <p>ThreadPoolExecutor(8) &middot; ExecuteService &middot; AdminService &middot; HealthService</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OS Concepts Mapping Table -->
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Operating Systems Concepts Mapping</h2>
+          <p class="panel-sub">Direct correspondence between OS theory and the framework implementation</p>
+        </div>
+      </div>
+      
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Operating System Concept</th>
+              <th>Distributed Realization in this Framework</th>
+              <th>Source File</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>IPC / RPC</strong></td>
+              <td>Remote Procedure Call (gRPC) extending local procedure invocations across distinct address spaces via sockets.</td>
+              <td><code>proto/service.proto</code></td>
+            </tr>
+            <tr>
+              <td><strong>Marshalling / Serialization</strong></td>
+              <td>Protocol Buffers v3 packing complex structured data into compact binary payloads (like syscall packaging).</td>
+              <td><code>generated/service_pb2.py</code></td>
+            </tr>
+            <tr>
+              <td><strong>Process Isolation</strong></td>
+              <td>3 separate OS processes listening on distinct network ports (:50051-:50053), preventing cross-memory corruption.</td>
+              <td><code>servers/server.py</code></td>
+            </tr>
+            <tr>
+              <td><strong>Concurrency &amp; Worker Pools</strong></td>
+              <td><code>ThreadPoolExecutor(max_workers=8)</code> within each server handling concurrent network calls asynchronously.</td>
+              <td><code>servers/server.py</code></td>
+            </tr>
+            <tr>
+              <td><strong>Mutual Exclusion / Critical Sections</strong></td>
+              <td><code>threading.RLock</code> guarding shared registry state, metric counters, and server lists against race conditions.</td>
+              <td><code>coordinator/cluster.py</code></td>
+            </tr>
+            <tr>
+              <td><strong>CPU Scheduling Fairness</strong></td>
+              <td>Round-robin pointer walk skipping offline nodes, avoiding starvation and balancing work evenly.</td>
+              <td><code>coordinator/load_balancer.py</code></td>
+            </tr>
+            <tr>
+              <td><strong>Periodic Kernel Daemons / Watchdogs</strong></td>
+              <td><code>HealthMonitor</code> daemon thread waking every 2.0s to poll node heartbeats and detect silent crashes.</td>
+              <td><code>coordinator/health_monitor.py</code></td>
+            </tr>
+            <tr>
+              <td><strong>Bounded Waiting &amp; Deadlock Avoidance</strong></td>
+              <td>Strict timeouts (<code>RPC_TIMEOUT=3.0s</code>, <code>HEALTH_TIMEOUT=1.0s</code>) preventing indefinite hang.</td>
+              <td><code>servers/server_config.py</code></td>
+            </tr>
+            <tr>
+              <td><strong>Fault Tolerance &amp; Failover</strong></td>
+              <td>Dynamic retry and node eviction allowing cluster to survive node crashes with zero client disruption.</td>
+              <td><code>coordinator/failover_manager.py</code></td>
+            </tr>
+            <tr>
+              <td><strong>Distributed Coordination</strong></td>
+              <td>Deterministic leader election designating a single master replica for centralized tasks.</td>
+              <td><code>coordinator/leader_election.py</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- TAB 4: FAULT-TOLERANCE SPECS & STATE MACHINES -->
+  <!-- ========================================================================= -->
+  <div id="tab-spec" class="tab-pane">
+    <div class="page-intro-card">
+      <h2>Fault-Tolerance Specifications & Formal State Machines</h2>
+      <p>Detailed technical documentation of the health state transitions, error classification rules, and mathematical backoff formulations governing the system.</p>
+    </div>
+
+    <div class="dashboard-grid">
+      
+      <!-- Health State Machine Card -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Server Health Lifecycle (3-State Machine)</h2>
+            <p class="panel-sub">Watchdog probe transitions and probation hysteresis</p>
+          </div>
+        </div>
+        
+        <div class="state-diagram-box">
+          <div class="state-node state-online">
+            <span class="st-title">ONLINE</span>
+            <span class="st-desc">Receiving live traffic</span>
+          </div>
+          <div class="state-arrow">
+            <span>&rarr; 1 failed probe (Crash / Timeout) &rarr;</span>
+          </div>
+          <div class="state-node state-offline">
+            <span class="st-title">OFFLINE</span>
+            <span class="st-desc">Excluded from pool</span>
+          </div>
+          <div class="state-arrow">
+            <span>&rarr; 1 successful probe &rarr;</span>
+          </div>
+          <div class="state-node state-recovering">
+            <span class="st-title">RECOVERING</span>
+            <span class="st-desc">Probation (No traffic)</span>
+          </div>
+          <div class="state-arrow">
+            <span>&rarr; 2nd successful probe &rarr; back to ONLINE</span>
+          </div>
+        </div>
+
+        <div class="specs-list">
+          <div class="spec-entry">
+            <strong>Hysteresis Protection:</strong> A reviving server enters <code>RECOVERING</code> for 1 probation cycle before rejoining the load balancer. This prevents "flapping" nodes from degrading cluster performance.
+          </div>
+          <div class="spec-entry">
+            <strong>Instant Eviction:</strong> If a client RPC encounters a connection crash (<code>UNAVAILABLE</code>), the failover manager immediately marks the node <code>OFFLINE</code> without waiting 2s for the next probe.
+          </div>
+        </div>
+      </div>
+
+      <!-- Tunables Summary -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Cluster Configuration Parameters</h2>
+            <p class="panel-sub">Single source of truth defined in <code>servers/server_config.py</code></p>
+          </div>
+        </div>
+
+        <div class="tunables-grid">
+          <div class="tunable-card">
+            <div class="t-name">MAX_ATTEMPTS</div>
+            <div class="t-val">3</div>
+            <div class="t-desc">1 initial try + up to 2 retries</div>
+          </div>
+          <div class="tunable-card">
+            <div class="t-name">RETRY_DELAY</div>
+            <div class="t-val">0.4 s</div>
+            <div class="t-desc">Linear backoff base multiplier</div>
+          </div>
+          <div class="tunable-card">
+            <div class="t-name">RPC_TIMEOUT</div>
+            <div class="t-val">3.0 s</div>
+            <div class="t-desc">Deadline for execute call</div>
+          </div>
+          <div class="tunable-card">
+            <div class="t-name">HEALTH_INTERVAL</div>
+            <div class="t-val">2.0 s</div>
+            <div class="t-desc">Heartbeat monitor cycle</div>
+          </div>
+          <div class="tunable-card">
+            <div class="t-name">HEALTH_TIMEOUT</div>
+            <div class="t-val">1.0 s</div>
+            <div class="t-desc">Probe deadline</div>
+          </div>
+          <div class="tunable-card">
+            <div class="t-name">RECOVERY_THRESHOLD</div>
+            <div class="t-val">2 probes</div>
+            <div class="t-desc">Required for OFFLINE &rarr; ONLINE</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Error Classification Matrix -->
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>gRPC Error Classification Matrix</h2>
+          <p class="panel-sub">How the client proxy determines whether to retry, failover, or abort</p>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>gRPC Status Code</th>
+              <th>Error Category</th>
+              <th>Underlying Cause</th>
+              <th>Coordinator Action</th>
+              <th>Client Strategy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>UNAVAILABLE</code>, <code>DEADLINE_EXCEEDED</code></td>
+              <td><span class="badge badge-failover">Crash / Network</span></td>
+              <td>Server process down, port unreachable, or unresponsive.</td>
+              <td>Server set to <code>OFFLINE</code> immediately.</td>
+              <td>Failover to a different server; retry up to 3x.</td>
+            </tr>
+            <tr>
+              <td><code>ABORTED</code>, <code>RESOURCE_EXHAUSTED</code>, <code>INTERNAL</code></td>
+              <td><span class="badge badge-transient">Transient Error</span></td>
+              <td>Temporary lock contention, memory spike, or simulated glitch.</td>
+              <td>Server remains <code>ONLINE</code>.</td>
+              <td>Wait backoff delay (0.4s &times; attempt); retry.</td>
+            </tr>
+            <tr>
+              <td><code>INVALID_ARGUMENT</code>, <code>NOT_FOUND</code>, <code>UNIMPLEMENTED</code></td>
+              <td><span class="badge badge-permanent">Permanent Error</span></td>
+              <td>Bad input data, missing method, or validation failure.</td>
+              <td>No server state change.</td>
+              <td>Fail-fast: abort immediately with 0 retries.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
