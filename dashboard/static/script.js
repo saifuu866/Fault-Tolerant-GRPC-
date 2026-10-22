@@ -12,6 +12,16 @@ let logSearchQuery = '';
 /* -------------------------------- HTTP Helpers -------------------------------- */
 async function api(url, options) {
   const res = await fetch(url, options);
+  if (!res.ok) {
+    let errMessage = `HTTP ${res.status}`;
+    try {
+      const errData = await res.json();
+      if (errData && errData.message) errMessage = errData.message;
+    } catch (_) {
+      // response is not JSON
+    }
+    throw new Error(errMessage);
+  }
   return res.json();
 }
 

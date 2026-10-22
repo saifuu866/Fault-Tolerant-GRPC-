@@ -187,10 +187,11 @@ class ComputeServicer(service_pb2_grpc.ComputeServiceServicer):
             with self._lock:
                 count = self._flaky_counters.get(request.request_id, 0) + 1
                 self._flaky_counters[request.request_id] = count
-            if count <= needed:
+            effective_attempt = request.attempt if getattr(request, "attempt", 0) > 0 else count
+            if effective_attempt <= needed:
                 raise TransientError(
-                    f"{self.server_id}: temporary glitch ({count}/{needed})")
-            return f"flaky recovered after {count - 1} failure(s)"
+                    f"{self.server_id}: temporary glitch ({effective_attempt}/{needed})")
+            return f"flaky recovered after {effective_attempt - 1} failure(s)"
 
         if operation == "boom":
             raise PermanentError("operation 'boom' always fails permanently")

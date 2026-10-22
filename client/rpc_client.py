@@ -56,14 +56,15 @@ class Attempt:
         self.server_id = server_id
         self.address = address
         self.outcome = outcome          # SUCCESS | RETRY | FAILED | NO_SERVER
-        self.code = code
-        self.message = message
+        self.code = code.name if hasattr(code, "name") else str(code or "")
+        self.message = str(message or "")
         self.duration_ms = duration_ms
 
     def to_dict(self):
+        code_str = self.code.name if hasattr(self.code, "name") else str(self.code or "")
         return {"attempt": self.number, "server_id": self.server_id,
                 "address": self.address, "outcome": self.outcome,
-                "code": self.code, "message": self.message,
+                "code": code_str, "message": self.message,
                 "duration_ms": round(self.duration_ms, 1)}
 
     def __str__(self):
